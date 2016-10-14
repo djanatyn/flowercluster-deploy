@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -eq 0 ]]; then
   fab -R stable -l
 else
   fab -R stable "$@"
