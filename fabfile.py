@@ -33,8 +33,8 @@ def registry_certs():
 
     path = json.loads(output)[0]['Mountpoint']
     with cd(path):
-        put('secrets/registry-domain.crt', 'domain.crt')
-        put('secrets/registry-domain.key', 'domain.key')
+        put('secrets/registry-domain.crt', 'domain.crt', use_sudo=True)
+        put('secrets/registry-domain.key', 'domain.key', use_sudo=True)
 
 
 update_roles_gce()
