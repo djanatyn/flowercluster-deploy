@@ -1,31 +1,40 @@
 #!/usr/bin/env python
 
 import json
-from getpass import getpass
+import yaml
 
-from fabric.api import task, run
+from fabric.api import task, run, abort, cd, put
 from fabric_gce_tools import update_roles_gce
 
-api = 'http://localhost:8200/v1'
+config = yaml.load(open('config.yml'))
+config.update(yaml.load(open('secrets/secrets.yml')))
 
 
 @task
 def unseal_vault():
     """ Unseal the vault using keys specified by the user at deploy time. """
 
-    url = api + '/sys/unseal'
+    url = config['api'] + '/sys/unseal'
 
-    keys = [
-        getpass(prompt='unseal key 1: '),
-        getpass(prompt='unseal key 2: '),
-        getpass(prompt='unseal key 3: '),
-    ]
-
-    print("---")
-
-    for key in keys:
+    for key in config['unseal_keys']:
         data = json.dumps({'key': key})
 
         run("curl -X PUT -d '{0}' {1}".format(data, url))
+
+
+@task
+def registry_certs():
+    """ Update registry certs. """
+
+    output = run("docker volume inspect registry-certs", quiet=True)
+
+    if output.failed:
+        abort("couldn't find docker volume")
+
+    path = json.loads(output)[0]['Mountpoint']
+    with cd(path):
+        put('secrets/registry-domain.crt', 'domain.crt')
+        put('secrets/registry-domain.key', 'domain.key')
+
 
 update_roles_gce()
