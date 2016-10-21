@@ -10,14 +10,25 @@ config = yaml.load(open('config.yml'))
 config.update(yaml.load(open('secrets/secrets.yml')))
 
 
+def vault(f):
+    """ Decorator for export VAULT_ADDR. """
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        with prefix('export VAULT_ADDR=' + config['url']):
+            return f(*args, **kwargs)
+
+    return wrapper
+
+
 @task
+@vault
 def unseal_vault():
     """ Unseal the vault using keys specified by the user at deploy time. """
 
-    with prefix('export VAULT_ADDR=' + config['url']):
-        for key in config['unseal_keys']:
-            with hide('running', 'stdout', 'stderr'):
-                run('vault unseal ' + key)
+    for key in config['unseal_keys']:
+        with hide('running', 'stdout', 'stderr'):
+            run('vault unseal ' + key)
 
 
 @task
@@ -35,4 +46,14 @@ def registry_certs():
         put('secrets/registry-domain.key', 'domain.key', use_sudo=True)
 
 
-update_roles_gce()
+@task
+def vault_policies():
+    """ Update vault policies. """
+
+    policies = yaml.load(open('policy.yml'))
+
+    for name, policy in policies.iteritems():
+        pass
+
+
+update_roles_gce(use_cache=False)
