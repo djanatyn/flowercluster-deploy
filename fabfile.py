@@ -17,7 +17,7 @@ def vault_task(f):
 
     @wraps(f)
     def wrapper(*args, **kwargs):
-        addr_prefix = prefix('export VAULT_ADDR=' + config['vault_addr'])
+        addr_prefix = prefix('export VAULT_ADDR=' + config['VAULT_ADDR'])
 
         with addr_prefix:
             return f(*args, **kwargs)

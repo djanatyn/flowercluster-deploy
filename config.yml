@@ -1,2 +1,2 @@
 ---
-api: 'http://localhost:8200/v1'
+VAULT_ADDR: 'http://localhost:8200/'
