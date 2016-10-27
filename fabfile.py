@@ -2,12 +2,14 @@
 
 import json
 import yaml
+from functools import wraps
+
+from config import load_config
 
 from fabric.api import task, run, abort, cd, put, prefix, hide
 from fabric_gce_tools import update_roles_gce
 
-config = yaml.load(open('config.yml'))
-config.update(yaml.load(open('secrets/secrets.yml')))
+config = load_config()
 
 
 def vault_task(f):
@@ -30,6 +32,14 @@ def unseal_vault():
     for key in config['unseal_keys']:
         with hide('running', 'stdout', 'stderr'):
             run('vault unseal ' + key)
+
+
+@vault_task
+def auth_vault():
+    """ Authorize with vault API client. """
+
+    with hide('running', 'stdout', 'stderr'):
+        run('vault auth ' + config['token'])
 
 
 @task
