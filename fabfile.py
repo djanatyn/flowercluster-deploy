@@ -10,19 +10,20 @@ config = yaml.load(open('config.yml'))
 config.update(yaml.load(open('secrets/secrets.yml')))
 
 
-def vault(f):
-    """ Decorator for export VAULT_ADDR. """
+def vault_task(f):
+    """ Decorator for exporting VAULT environmental variables. """
 
     @wraps(f)
     def wrapper(*args, **kwargs):
-        with prefix('export VAULT_ADDR=' + config['url']):
+        addr_prefix = prefix('export VAULT_ADDR=' + config['vault_addr'])
+
+        with addr_prefix:
             return f(*args, **kwargs)
 
-    return wrapper
+    return task(wrapper)
 
 
-@task
-@vault
+@vault_task
 def unseal_vault():
     """ Unseal the vault using keys specified by the user at deploy time. """
 
