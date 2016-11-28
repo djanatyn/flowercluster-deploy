@@ -18,6 +18,7 @@ def deploy():
     """ Run a full deploy. """
 
     vault.unseal()
+    vault.init_secrets()
     vault.build_token()
 
     containers.build_all()
