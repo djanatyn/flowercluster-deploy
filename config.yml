@@ -1,2 +1,36 @@
 ---
-VAULT_ADDR: 'http://localhost:8200/'
+# vault credentials
+vault:
+  VAULT_ADDR: 'http://flowercluster:8200/'
+  policies:
+    build-token: '/opt/flowercluster/policies/build-token.hcl'
+  approles:
+    defaults:
+      secret_id_ttl: '10m'
+      token_ttl: '10m'
+      secret_id_num_uses: '1'
+    ansible:
+      path: '/opt/flowercluster/policies/ansible.hcl'
+      policies: 'ansible'
+      token_ttl: '24h'
+      token_max_ttl: '168h'
+      renewable: 'true'
+  build-token:
+    ttl: '10m'
+    renewable: 'false'
+
+# GCE flowercluster compute instance settings
+flowercluster-instance:
+  machine-type: 'n1-standard-1'
+  disk: 'flowercluster-docker'
+  disk-size: '250GB'
+  network: 'default'
+  image: 'https://www.googleapis.com/compute/v1/projects/coreos-cloud/global/images/coreos-alpha-1185-0-0-v20160928'
+
+# containers to build upon deploy
+build:
+- path: '/opt/flowercluster/docker/fedora-ansible'
+  name: 'flowercluster/fedora-ansible'
+- path: '/opt/flowercluster/docker/development'
+  name: 'flowercluster/development'
+  approle: 'ansible'
