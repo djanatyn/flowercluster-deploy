@@ -106,8 +106,8 @@ systemd:
         After=docker.service
 
         [Service]
-        RestartSec=10s
-        Restart=on-failure
+        Type=oneshot
+        RemainAfterExit=yes
         ExecStart=/usr/bin/docker start dev1
         ExecStop=/usr/bin/docker stop -t 2 dev1
     - name: haproxy.service
