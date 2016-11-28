@@ -38,5 +38,5 @@ build:
 # systemd units to start
 run:
 - name: 'development'
-  start: 'docker run --name dev1 -v home-data:/home --net host'
+  cmd: 'docker run --name dev1 -v home-data:/home --net host'
   approle: 'ansible'
