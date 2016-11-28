@@ -14,7 +14,7 @@ run_config = configuration['run']
 @roles('flowercluster')
 @task
 def start_all():
-    """ Start all units in config.yml during a deploy. """
+    """ Start all containers in config.yml during a deploy. """
 
     for config in run_config:
         print('starting ' + config['name'])
@@ -24,25 +24,25 @@ def start_all():
 @roles('flowercluster')
 @task
 def start(name):
-    """ Start all units matching a name. """
+    """ Initialize all containers matching a name. """
 
     for config in [u for u in run_config if u['name'] == name]:
         _run_start(config)
 
 
 def _run_start(config):
-    """ Start a systemd unit to get a container running.
-    Returns whether the start was successful.
-    """
+    """ Initialize a container with a SecretID token.  """
 
-    start = run('sudo systemctl start ' + config['unit'])
+    cmd = [config['cmd'], vault.secret_id(config['approle'])]
+
+    start = run(string.join(cmd))
     return start.succeeded
 
 
 @roles('flowercluster')
 @task
 def build_all():
-    """ Build all containers specified in config.yml """
+    """ Build all images specified in config.yml """
 
     for config in build_config:
         _run_build(config)
@@ -51,14 +51,14 @@ def build_all():
 @roles('flowercluster')
 @task
 def build(name):
-    """ Build all containers matching a name. """
+    """ Build all images matching a name. """
 
-    for config in [c for c in build_config if c['name'] == name]:
+    for config in [i for i in build_config if i['name'] == name]:
         _run_build(config)
 
 
 def _run_build(config):
-    """ Run the docker command to build a container, using its configuration
+    """ Run the docker command to build an image, using its configuration
     from config.yml.
     """
 
