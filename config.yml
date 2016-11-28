@@ -35,7 +35,7 @@ build:
   name: 'flowercluster/development'
   approle: 'ansible'
 
-# how to run
+# systemd units to start
 run:
 - name: 'development'
   unit: 'development.service'
