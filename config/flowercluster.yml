@@ -1,6 +1,8 @@
 ---
 systemd:
   units:
+    - name: locksmithd.service
+      enable: False
     - name: sshd.socket
       enable: True
       contents: |
