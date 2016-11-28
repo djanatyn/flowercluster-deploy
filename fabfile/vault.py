@@ -11,6 +11,7 @@ from load_config import configuration
 from tokens import save_token, load_token
 
 vault_config = configuration['vault']
+secrets = configuration['secrets']
 
 
 def get_build_token():
@@ -160,3 +161,19 @@ def secret_id(approle, token=None):
 
     print(green('SecretID Wrap Token: ' + token))
     return token
+
+
+@roles('flowercluster')
+@vault_task
+def init_secrets():
+    """ Initialize secrets in $HOME/.flowercluster/secrets.yml. """
+
+    auth_vault()
+
+    for secret in secrets:
+        cmd = ['vault write', secret['path']]
+
+        for key, value in secret['data'].iteritems():
+            cmd.append(key + '=' + value)
+
+        run(string.join(cmd))
