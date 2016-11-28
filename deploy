@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [[ $# -eq 0 ]]; then
-  fab -R stable -l
-else
-  fab -R stable "$@"
-fi
