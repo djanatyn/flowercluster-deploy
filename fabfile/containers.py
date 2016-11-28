@@ -8,6 +8,35 @@ from fabric.api import task, run, cd, roles
 import vault
 
 build_config = configuration['build']
+run_config = configuration['run']
+
+
+@roles('flowercluster')
+@task
+def start_all():
+    """ Start all units in config.yml during a deploy. """
+
+    for config in run_config:
+        print('starting ' + config['name'])
+        _run_start(config)
+
+
+@roles('flowercluster')
+@task
+def start(name):
+    """ Start all units matching a name. """
+
+    for config in [u for u in run_config if u['name'] == name]:
+        _run_start(config)
+
+
+def _run_start(config):
+    """ Start a systemd unit to get a container running.
+    Returns whether the start was successful.
+    """
+
+    start = run('sudo systemctl start ' + config['unit'])
+    return start.succeeded
 
 
 @roles('flowercluster')
@@ -45,4 +74,4 @@ def _run_build(config):
         run(string.join(args))
 
 
-__all__ = ['build', 'build_all']
+__all__ = ['build', 'build_all', 'start', 'start_all']

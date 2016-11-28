@@ -34,3 +34,8 @@ build:
 - path: '/opt/flowercluster/docker/development'
   name: 'flowercluster/development'
   approle: 'ansible'
+
+# how to run
+run:
+- name: 'development'
+  unit: 'development.service'
