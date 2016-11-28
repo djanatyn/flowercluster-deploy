@@ -39,4 +39,5 @@ build:
 run:
 - name: 'development'
   cmd: 'docker run --name dev1 -v home-data:/home --net host flowercluster/development'
+  unit: 'development.service'
   approle: 'ansible'

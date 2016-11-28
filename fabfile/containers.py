@@ -36,7 +36,8 @@ def _run_start(config):
     cmd = [config['cmd'], vault.secret_id(config['approle'])]
 
     start = run(string.join(cmd))
-    return start.succeeded
+    if start.succeeded:
+        run('sudo systemctl restart ' + config['unit'])
 
 
 @roles('flowercluster')
