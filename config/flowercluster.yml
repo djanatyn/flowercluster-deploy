@@ -1,0 +1,167 @@
+---
+systemd:
+  units:
+    - name: sshd.socket
+      enable: True
+      contents: |
+        [Unit]
+        Description=OpenSSH Server Socket
+        Conflicts=sshd.service
+
+        [Socket]
+        ListenStream=2222
+        FreeBind=true
+        ReusePort=true
+        Accept=yes
+
+        [Install]
+        WantedBy=sockets.target
+    - name: unzip-vault.service
+      enable: True
+      contents: |
+        [Unit]
+        ConditionFirstBoot=yes
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/unzip /opt/vault.zip -d /opt/bin/
+        
+        [Install]
+        WantedBy=multi-user.target
+    - name: format-flowercluster-docker.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=Formats the docker persistent drive
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/bash -c 'if [ "$(blkid -s TYPE -o value /dev/disk/by-id/google-flowercluster-docker)" != "ext4" ]; then /usr/sbin/mkfs.ext4 /dev/disk/by-id/google-flowercluster-docker; fi'
+    - name: var-lib-docker.mount
+      enable: True
+      contents: |
+        [Unit]
+        Description=mount persistent drive to /var/lib/docker
+        After=format-flowercluster-docker.service
+        Requires=format-flowercluster-docker.service
+
+        [Mount]
+        What=/dev/disk/by-id/google-flowercluster-docker
+        Where=/var/lib/docker
+        Type=ext4
+    - name: clone-flowercluster.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=Fetches flowercluster repository
+        ConditionFirstBoot=yes
+        Wants=vault.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ConditionPathExists=!/opt/flowercluster
+        ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git /opt/flowercluster
+    - name: vault.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=hashicorp vault
+        After=docker.service
+
+        [Service]
+        WorkingDirectory=/opt/flowercluster/docker/vault
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStop=/opt/bin/docker-compose stop
+        ExecStart=/opt/bin/docker-compose up -d
+    - name: docker.service
+      enable: True
+      dropins:
+        - name: 10-wait-docker.conf
+          contents: |
+            [Unit]
+            After=var-lib-docker.mount
+            Requires=var-lib-docker.mount
+            Requires=clone-flowercluster.service
+            Wants=gogs.service
+    - name: gogs.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=gogs
+        After=docker.service
+
+        [Service]
+        RestartSec=10s
+        Restart=on-failure
+        ExecStartPre=-/usr/bin/docker kill gogs1
+        ExecStartPre=-/usr/bin/docker rm gogs1
+        ExecStart=/usr/bin/docker run --name gogs1 -p 3000:3000 -p 3001:22 -v gogs-data:/data flowercluster:5000/flowercluster-gogs
+        ExecStop=/usr/bin/docker stop -t 2 gogs
+    - name: development.service
+      enable: True
+      contents: |
+        [Unit]
+        After=docker.service
+
+        [Service]
+        RestartSec=10s
+        Restart=on-failure
+        ExecStart=/usr/bin/docker start dev1
+        ExecStop=/usr/bin/docker stop -t 2 dev1
+    - name: haproxy.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=HAProxy
+        After=docker.service
+
+        [Service]
+        TimeoutStartSec=0
+        ExecStartPre=-/usr/bin/docker kill haproxy1
+        ExecStartPre=-/usr/bin/docker rm haproxy1
+        ExecStartPre=/usr/bin/docker run --net host --name haproxy1 flowercluster:5000/haproxy
+        ExecStart=/usr/bin/docker start haproxy1
+        ExecStop=/usr/bin/docker stop haproxy1
+storage:
+  files:
+    - path: /opt/bin/docker-compose
+      filesystem: root
+      mode: 0755
+      user:
+        id: 0
+      contents:
+        remote:
+          url: https://github.com/docker/compose/releases/download/1.8.0/docker-compose-Linux-x86_64
+          verification:
+            hash:
+              function: 'sha512'
+              sum: 'b608b8c20d30e344797a5e5ab06e4ba4f3358a84b039924b09757cc04a96352d3cf0f360c239925ac5144bf9017c81c19f4ebe100bb75824698fc16b335cd9db'
+    - path: /opt/vault.zip
+      filesystem: root
+      mode: 0644
+      user:
+        id: 0
+      contents:
+        remote:
+          url: https://releases.hashicorp.com/vault/0.6.2/vault_0.6.2_linux_amd64.zip
+          verification:
+            hash:
+              function: 'sha512'
+              sum: '5a37ad553d38849a5a91568ce03d23abf668850049b3d550a5309a1acc391347156d09e08c8115599654c19a7c67856aa6776ac939a34440a095eb35cc47de37'
+    - path: /etc/ssh/sshd_config
+      filesystem: root
+      mode: 0777
+      user:
+        id: 0
+      contents:
+        inline: |
+          # Use most defaults for sshd configuration.
+          UsePrivilegeSeparation sandbox
+          Subsystem sftp internal-sftp
+          ClientAliveInterval 180
+          UseDNS no
+          UsePAM yes
+          PrintLastLog no # handled by PAM
+          PrintMotd no # handled by PAM
