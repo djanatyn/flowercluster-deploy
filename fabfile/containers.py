@@ -33,10 +33,11 @@ def start(name):
 def _run_start(config):
     """ Initialize a container with a SecretID token.  """
 
-    cmd = [config['cmd'], vault.secret_id(config['approle'])]
+    if 'cmd' in config:
+        cmd = [config['cmd'], vault.secret_id(config['approle'])]
+        run(string.join(cmd))
 
-    start = run(string.join(cmd))
-    if start.succeeded:
+    if 'unit' in config:
         run('sudo systemctl restart ' + config['unit'])
 
 
