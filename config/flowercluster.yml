@@ -111,8 +111,6 @@ systemd:
             After=var-lib-docker.mount
             Requires=var-lib-docker.mount
             Requires=clone-flowercluster.service
-            Wants=haproxy.service
-            Wants=gogs.service
     - name: development.service
       enable: True
       contents: |
