@@ -113,6 +113,7 @@ def build_token():
     with hide('running', 'stdout'):
         token = yaml.load(run(string.join(token_args)))
 
+    print(green('Build Token: ' + token['auth']['client_token']))
     save_token(token)
     return token['auth']['client_token']
 
