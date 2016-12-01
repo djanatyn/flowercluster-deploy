@@ -82,7 +82,7 @@ systemd:
         [Unit]
         Description=hashicorp vault
         After=docker.service
-        Wants=build-init-container.service
+        Wants=build-init-image.service
 
         [Service]
         WorkingDirectory=/opt/flowercluster/docker/vault
