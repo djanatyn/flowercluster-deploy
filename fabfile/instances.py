@@ -32,6 +32,7 @@ def launch_instance():
         "--machine-type {}".format(instance_config['machine-type']),
         "--network {}".format(instance_config['network']),
         "--image {}".format(instance_config['image']),
+        "--address {}".format(instance_config['address']),
     ]
 
     local(string.join(args))

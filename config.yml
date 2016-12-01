@@ -26,6 +26,7 @@ flowercluster-instance:
   disk-size: '250GB'
   network: 'default'
   image: 'https://www.googleapis.com/compute/v1/projects/coreos-cloud/global/images/coreos-alpha-1185-0-0-v20160928'
+  address: 'flowercluster'
 
 # containers to build upon deploy
 build:
