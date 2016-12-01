@@ -64,12 +64,25 @@ systemd:
         RemainAfterExit=yes
         ConditionPathExists=!/opt/flowercluster
         ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git /opt/flowercluster
+    - name: build-init-container.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=Builds flowercluster/init
+        After=vault.service
+
+        [Service]
+        WorkingDirectory=/opt/flowercluster/docker/flowercluster-init
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/docker build . -t flowercluster/init
     - name: vault.service
       enable: True
       contents: |
         [Unit]
         Description=hashicorp vault
         After=docker.service
+        Wants=build-init-container.service
 
         [Service]
         WorkingDirectory=/opt/flowercluster/docker/vault
