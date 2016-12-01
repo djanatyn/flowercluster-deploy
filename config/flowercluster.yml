@@ -58,6 +58,7 @@ systemd:
         Description=Fetches flowercluster repository
         ConditionFirstBoot=yes
         ConditionPathExists=!/opt/flowercluster
+        After=docker.service
         Wants=vault.service
 
         [Service]
@@ -81,7 +82,7 @@ systemd:
       contents: |
         [Unit]
         Description=hashicorp vault
-        After=docker.service
+        After=clone-flowercluster.service
         Wants=build-init-image.service
 
         [Service]
