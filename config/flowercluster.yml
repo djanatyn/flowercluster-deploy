@@ -57,18 +57,18 @@ systemd:
         [Unit]
         Description=Fetches flowercluster repository
         ConditionFirstBoot=yes
+        ConditionPathExists=!/opt/flowercluster
         Wants=vault.service
 
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ConditionPathExists=!/opt/flowercluster
-        ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git /opt/flowercluster
-    - name: build-init-container.service
+        ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git -b feature/flowercluster-init /opt/flowercluster
+    - name: build-init-image.service
       enable: True
       contents: |
         [Unit]
-        Description=Builds flowercluster/init
+        Description=builds flowercluster/init image for python initialization script
         After=vault.service
 
         [Service]
