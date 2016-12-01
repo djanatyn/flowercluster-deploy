@@ -8,21 +8,10 @@ from fabric.api import task, prefix, hide, run, roles
 from fabric.colors import green
 
 from load_config import configuration
-from tokens import save_token, load_token
+from tokens import save_token
 
 vault_config = configuration['vault']
 secrets = configuration['secrets']
-
-
-def get_build_token():
-    """ Attempt to load a build token. If one can't be found, generate another. """
-
-    token = load_token()
-
-    if token is None:
-        token = build_token()
-
-    return token
 
 
 def auth_vault(token=None):
@@ -60,44 +49,6 @@ def unseal():
 
 @roles('flowercluster')
 @vault_task
-def init_roles():
-    """ Update vault AppRoles and policies. """
-
-    auth_vault()
-
-    # update policies
-    for policy, path in vault_config['policies'].iteritems():
-        run("vault policy-write {0} {1}".format(policy, path))
-
-    # update roles and their policies
-    defaults = vault_config['approles']['defaults']
-    for role, role_config in vault_config['approles'].iteritems():
-        # skip default role
-        if role == 'defaults':
-            continue
-
-        # update policy
-        run("vault policy-write {0} {1}".format(role, role_config['path']))
-
-        # update AppRole
-        approle_args = ["vault write auth/approle/role/{}".format(role)]
-
-        for arg, value in role_config.iteritems():
-            if arg == 'path':
-                continue
-
-            approle_args.append("{0}={1}".format(arg, value))
-
-        # append keys and values for each AppRole init argument
-        for arg in defaults.keys():
-            if arg not in role_config:
-                approle_args.append("{0}={1}".format(arg, defaults[arg]))
-
-        run(string.join(approle_args))
-
-
-@roles('flowercluster')
-@vault_task
 def build_token():
     """ Generate and return a build token.
 
@@ -116,52 +67,6 @@ def build_token():
     print(green('Build Token: ' + token['auth']['client_token']))
     save_token(token)
     return token['auth']['client_token']
-
-
-@roles('flowercluster')
-@vault_task
-def role_id(approle, token=None):
-    """ Get the RoleID for a given AppRole. """
-
-    if approle not in vault_config['approles'].keys():
-        raise StandardError("Invalid AppRole!")
-
-    if token is None:
-        token = get_build_token()
-
-    auth_vault(token)
-
-    role = 'auth/approle/role/' + approle
-    role_cmd = 'vault read -format=yaml ' + role + '/role-id'
-
-    with hide('stdout'):
-        role_id = yaml.load(run(role_cmd))['data']['role_id']
-
-    print(green('RoleID: ' + role_id))
-    return role_id
-
-
-@roles('flowercluster')
-@vault_task
-def secret_id(approle, token=None):
-    """ Return a SecretID wrapped-token. """
-
-    if approle not in vault_config['approles'].keys():
-        raise StandardError("Invalid AppRole!")
-
-    if token is None:
-        token = get_build_token()
-
-    auth_vault(token)
-
-    role = 'auth/approle/role/' + approle
-    secret_cmd = 'vault write -wrap-ttl=5m -format=yaml -f ' + role + '/secret-id'
-
-    with hide('stdout'):
-        token = yaml.load(run(secret_cmd))['wrap_info']['token']
-
-    print(green('SecretID Wrap Token: ' + token))
-    return token
 
 
 @roles('flowercluster')
