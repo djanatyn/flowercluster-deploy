@@ -57,14 +57,15 @@ systemd:
         [Unit]
         Description=Fetches flowercluster repository
         ConditionFirstBoot=yes
-        ConditionPathExists=!/opt/flowercluster
+        ConditionPathExists=!/var/local/flowercluster
         After=docker.service
         Wants=vault.service
 
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git -b feature/flowercluster-init /opt/flowercluster
+        ExecStartPre=/usr/bin/mkdir -p /var/local/flowercluster
+        ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git -b feature/flowercluster-init /var/local/flowercluster
     - name: install-flowercluster-scripts.service
       enable: True
       contents: |
@@ -75,7 +76,7 @@ systemd:
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/usr/bin/rsnyc -rvzP /opt/flowercluster/bin/ /opt/bin
+        ExecStart=/usr/bin/rsnyc -rvzP /var/local/flowercluster/bin/ /opt/bin
     - name: build-init-image.service
       enable: True
       contents: |
@@ -84,7 +85,7 @@ systemd:
         After=vault.service
 
         [Service]
-        WorkingDirectory=/opt/flowercluster/docker/flowercluster-init
+        WorkingDirectory=/var/local/flowercluster/docker/flowercluster-init
         Type=oneshot
         RemainAfterExit=yes
         ExecStart=/usr/bin/docker build . -t flowercluster/init
@@ -97,7 +98,7 @@ systemd:
         Wants=build-init-image.service
 
         [Service]
-        WorkingDirectory=/opt/flowercluster/docker/vault
+        WorkingDirectory=/var/local/flowercluster/docker/vault
         Type=oneshot
         RemainAfterExit=yes
         ExecStop=/opt/bin/docker-compose stop
