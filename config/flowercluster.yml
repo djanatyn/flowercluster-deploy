@@ -76,7 +76,7 @@ systemd:
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/usr/bin/rsnyc -rvzP /var/local/flowercluster/bin/ /opt/bin
+        ExecStart=/usr/bin/rsync -rvzP /var/local/flowercluster/bin/ /opt/bin
 
         [Install]
         WantedBy=multi-uesr.target
