@@ -65,6 +65,17 @@ systemd:
         Type=oneshot
         RemainAfterExit=yes
         ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git -b feature/flowercluster-init /opt/flowercluster
+    - name: install-flowercluster-scripts.service
+      enable: True
+      contents: |
+        [Unit]
+        Description=copy flowercluster shell scripts to $PATH
+        After=clone-flowercluster.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/cp -v /opt/flowercluster/bin/* /opt/bin/
     - name: build-init-image.service
       enable: True
       contents: |
