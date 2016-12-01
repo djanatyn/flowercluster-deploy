@@ -66,7 +66,7 @@ systemd:
         RemainAfterExit=yes
         ExecStartPre=/usr/bin/mkdir -p /var/local/flowercluster
         ExecStart=/usr/bin/git clone https://github.com/djanatyn/flowercluster.git -b feature/flowercluster-init /var/local/flowercluster
-    - name: install-flowercluster-scripts.service
+    - name: update-scripts.service
       enable: True
       contents: |
         [Unit]
@@ -86,7 +86,7 @@ systemd:
         [Unit]
         Description=builds flowercluster/init image for python initialization script
         After=vault.service
-        After=install-flowercluster-scripts.service
+        After=update-scripts.service
 
         [Service]
         Type=oneshot
