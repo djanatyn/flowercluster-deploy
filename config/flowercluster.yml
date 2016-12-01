@@ -86,12 +86,12 @@ systemd:
         [Unit]
         Description=builds flowercluster/init image for python initialization script
         After=vault.service
+        After=install-flowercluster-scripts.service
 
         [Service]
-        WorkingDirectory=/var/local/flowercluster/docker/flowercluster-init
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/usr/bin/docker build . -t flowercluster/init
+        ExecStart=/opt/bin/rebuild_init
     - name: vault.service
       enable: True
       contents: |
