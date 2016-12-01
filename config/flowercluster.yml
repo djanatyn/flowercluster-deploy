@@ -75,7 +75,7 @@ systemd:
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/usr/bin/cp -v /opt/flowercluster/bin/* /opt/bin/
+        ExecStart=/usr/bin/rsnyc -rvzP /opt/flowercluster/bin/ /opt/bin
     - name: build-init-image.service
       enable: True
       contents: |
