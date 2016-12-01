@@ -88,20 +88,6 @@ systemd:
             Requires=clone-flowercluster.service
             Wants=haproxy.service
             Wants=gogs.service
-    - name: gogs.service
-      enable: True
-      contents: |
-        [Unit]
-        Description=gogs docker container
-        After=haproxy.service
-
-        [Service]
-        RestartSec=10s
-        Restart=on-failure
-        ExecStartPre=-/usr/bin/docker kill gogs1
-        ExecStartPre=-/usr/bin/docker rm gogs1
-        ExecStart=/usr/bin/docker run --net web --name gogs1 -v gogs-data:/data gogs/gogs
-        ExecStop=/usr/bin/docker stop -t 2 gogs
     - name: development.service
       enable: True
       contents: |
@@ -113,21 +99,6 @@ systemd:
         RemainAfterExit=yes
         ExecStart=/usr/bin/docker start dev1
         ExecStop=/usr/bin/docker stop -t 2 dev1
-    - name: haproxy.service
-      enable: True
-      contents: |
-        [Unit]
-        Description=HAProxy
-        After=docker.service
-
-        [Service]
-        TimeoutStartSec=0
-        ExecStartPre=-/usr/bin/docker network create web
-        ExecStartPre=-/usr/bin/docker kill haproxy1
-        ExecStartPre=-/usr/bin/docker rm haproxy1
-        ExecStartPre=/usr/bin/docker run --net web --name haproxy1 flowercluster/haproxy
-        ExecStart=/usr/bin/docker start haproxy1
-        ExecStop=/usr/bin/docker stop haproxy1
 storage:
   files:
     - path: /opt/bin/docker-compose
