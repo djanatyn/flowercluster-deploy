@@ -79,7 +79,7 @@ systemd:
         ExecStart=/usr/bin/rsync -rvzP /var/local/flowercluster/bin/ /opt/bin
 
         [Install]
-        WantedBy=multi-uesr.target
+        WantedBy=multi-user.target
     - name: build-init-image.service
       enable: True
       contents: |
